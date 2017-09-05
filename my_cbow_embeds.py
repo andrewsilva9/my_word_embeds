@@ -96,7 +96,6 @@ while curr_epoch < 100:
         model.zero_grad()
 
         if use_gpu:
-            print [word_to_ix[word] for word in context]
             context_vars = autograd.Variable(torch.cuda.LongTensor([word_to_ix[word] for word in context]))
         else:
             context_vars = autograd.Variable(torch.LongTensor([word_to_ix[word] for word in context]))
