@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import pickle
 
+
 def save_checkpoint(state, filename='my_cbow_embedding_model.pth.tar'):
     torch.save(state, filename)
 
@@ -16,12 +17,9 @@ def load_checkpoint(filename):
 
 use_gpu = torch.cuda.is_available()
 
-raw_text = pickle.load(open('raw_text.pickle', 'rb'))
-word_to_ix = {}
-for i, word in enumerate(raw_text):
-    if word not in word_to_ix:
-        word_to_ix[word] = len(word_to_ix) + 1
-print 'set created...'
+raw_text = pickle.load(open('raw_text.pkl', 'rb'))
+word_to_ix = pickle.load(open('word_to_ix.pkl', 'rb'))
+
 # print data[:5]
 print_every = 1000
 
@@ -54,7 +52,7 @@ chk = load_checkpoint('my_cbow_embedding_model100.pth.tar')
 curr_epoch = chk['epoch']
 model.load_state_dict(chk['state_dict'])
 optimizer.load_state_dict(chk['optimizer'])
-
+word_to_embeds = {}
 for word in word_to_ix.keys():
     model.zero_grad()
     # model.test()
@@ -67,4 +65,8 @@ for word in word_to_ix.keys():
     if word_to_ix[word] == 0:
         continue
     embeds = model(context_vars)
+    word_to_embeds[word] = embeds
+
+pickle.dump(word_to_embeds, open('word_to_embeds.pkl', 'wb'))
+
     # print 'Embedding:', embeds

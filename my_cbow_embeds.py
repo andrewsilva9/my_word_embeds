@@ -16,41 +16,16 @@ def load_checkpoint(filename):
 
 use_gpu = torch.cuda.is_available()
 
-#
-# def get_rid_of(list_in, word):
-#     for item in range(list_in.count(word)):
-#            list_in.remove(word)
-#     return list_in
-# master_txt_file = open('master.txt', 'r')
-# print 'file in...'
-#
-# raw_text = str(master_txt_file.read()).split()
-# print 'text split up...'
-# print raw_text.count('Me:')
-# for i in range(raw_text.count('Me:')):
-#     raw_text.remove('Me:')
-# print 'Me: removed...'
-#
-# for i in range(raw_text.count('Friend:')):
-#     raw_text.remove('Friend:')
-# print 'Friend: removed...'
-#
-# pickle.dump(raw_text, open('raw_text.pickle', 'wb'))
-
-raw_text = pickle.load(open('raw_text.pickle', 'rb'))
-word_to_ix = {}
-for i, word in enumerate(raw_text):
-    word = word.lower()
-    if word not in word_to_ix:
-        word_to_ix[word] = len(word_to_ix) + 1
+raw_text = pickle.load(open('raw_text.pkl', 'rb'))
+word_to_ix = pickle.load(open('word_to_ix.pkl', 'rb'))
 print 'set created...'
 data = []
 # the original implementation will introduce some out-of-range index
 # so let's make it consective to avoid such issue
 for i in range(2, len(raw_text)-2):
-    context = [raw_text[i-2].lower(), raw_text[i-1].lower(),
-                raw_text[i+1].lower(), raw_text[i+2].lower()]
-    target = raw_text[i].lower()
+    context = [raw_text[i-2], raw_text[i-1],
+                raw_text[i+1], raw_text[i+2]]
+    target = raw_text[i]
     data.append((context, target))
 
 # print data[:5]
