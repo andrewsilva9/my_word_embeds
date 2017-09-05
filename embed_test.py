@@ -20,17 +20,8 @@ raw_text = pickle.load(open('raw_text.pickle', 'rb'))
 word_to_ix = {}
 for i, word in enumerate(raw_text):
     if word not in word_to_ix:
-        word_to_ix[word] = len(word_to_ix)
+        word_to_ix[word] = len(word_to_ix) + 1
 print 'set created...'
-data = []
-# the original implementation will introduce some out-of-range index
-# so let's make it consective to avoid such issue
-for i in range(2, len(raw_text)-2):
-    context = [raw_text[i-2], raw_text[i-1],
-                raw_text[i+1], raw_text[i+2]]
-    target = raw_text[i]
-    data.append((context, target))
-
 # print data[:5]
 print_every = 1000
 

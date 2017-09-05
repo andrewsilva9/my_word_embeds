@@ -42,15 +42,15 @@ word_to_ix = {}
 for i, word in enumerate(raw_text):
     word = word.lower()
     if word not in word_to_ix:
-        word_to_ix[word] = len(word_to_ix)
+        word_to_ix[word] = len(word_to_ix) + 1
 print 'set created...'
 data = []
 # the original implementation will introduce some out-of-range index
 # so let's make it consective to avoid such issue
 for i in range(2, len(raw_text)-2):
-    context = [raw_text[i-2], raw_text[i-1],
-                raw_text[i+1], raw_text[i+2]]
-    target = raw_text[i]
+    context = [raw_text[i-2].lower(), raw_text[i-1].lower(),
+                raw_text[i+1].lower(), raw_text[i+2].lower()]
+    target = raw_text[i].lower()
     data.append((context, target))
 
 # print data[:5]
@@ -83,12 +83,12 @@ else:
     loss_function = nn.NLLLoss()
 optimizer = optim.SGD(model.parameters(), lr=.001)
 
-chk = load_checkpoint('my_cbow_embedding_model100.pth.tar')
-curr_epoch = chk['epoch']
-model.load_state_dict(chk['state_dict'])
-optimizer.load_state_dict(chk['optimizer'])
-
-while curr_epoch < 101:
+# chk = load_checkpoint('my_cbow_embedding_model100.pth.tar')
+# curr_epoch = chk['epoch']
+# model.load_state_dict(chk['state_dict'])
+# optimizer.load_state_dict(chk['optimizer'])
+curr_epoch = 0
+while curr_epoch < 100:
     total_loss = torch.cuda.FloatTensor([0])
     iter = 0
     for context, target in data:
