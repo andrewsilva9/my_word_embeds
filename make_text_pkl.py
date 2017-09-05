@@ -15,9 +15,9 @@ for index in range(len(raw_text)):
 
 pickle.dump(raw_text, open('raw_text.pkl', 'wb'))
 
-word_to_ix = {}
+word_to_ix = {' ': 0}
 for i, word in enumerate(raw_text):
     if word not in word_to_ix:
-        word_to_ix[word] = len(word_to_ix) + 1
+        word_to_ix[word] = len(word_to_ix)
 
 pickle.dump(word_to_ix, open('word_to_ix.pkl', 'wb'))
