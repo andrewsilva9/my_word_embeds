@@ -48,7 +48,7 @@ else:
     loss_function = nn.NLLLoss()
 optimizer = optim.SGD(model.parameters(), lr=.001)
 
-chk = load_checkpoint('my_cbow_embedding_model100.pth.tar')
+chk = load_checkpoint('my_cbow_embedding_model36.pth.tar')
 curr_epoch = chk['epoch']
 model.load_state_dict(chk['state_dict'])
 optimizer.load_state_dict(chk['optimizer'])
@@ -70,6 +70,6 @@ for word in word_to_ix.keys():
     embeds_to_words[embeds] = word
 
 pickle.dump(word_to_embeds, open('word_to_embeds.pkl', 'wb'))
-pickle.dump(embeds_to_words, open('embeds_to_words.pkl', 'wb'))
+pickle.dump(embeds_to_words, open('embeds_to_word.pkl', 'wb'))
 
     # print 'Embedding:', embeds
