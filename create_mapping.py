@@ -53,6 +53,7 @@ curr_epoch = chk['epoch']
 model.load_state_dict(chk['state_dict'])
 optimizer.load_state_dict(chk['optimizer'])
 word_to_embeds = {}
+embeds_to_words = {}
 for word in word_to_ix.keys():
     model.zero_grad()
     # model.test()
@@ -66,7 +67,9 @@ for word in word_to_ix.keys():
         continue
     embeds = model(context_vars)
     word_to_embeds[word] = embeds
+    embeds_to_words[embeds] = word
 
 pickle.dump(word_to_embeds, open('word_to_embeds.pkl', 'wb'))
+pickle.dump(embeds_to_words, open('embeds_to_words.pkl', 'wb'))
 
     # print 'Embedding:', embeds
