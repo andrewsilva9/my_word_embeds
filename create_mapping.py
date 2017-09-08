@@ -58,9 +58,9 @@ for word in word_to_ix.keys():
     model.zero_grad()
     # model.test()
     if use_gpu:
-        context_vars = autograd.Variable(torch.cuda.LongTensor(word_to_ix[word]))
+        context_vars = autograd.Variable([torch.cuda.LongTensor(word_to_ix[word])])
     else:
-        context_vars = autograd.Variable(torch.LongTensor(word_to_ix[word]))
+        context_vars = autograd.Variable(torch.LongTensor([word_to_ix[word]]))
     print 'Word:', word
     print 'IX:', word_to_ix[word]
     print 'ContextVars:', context_vars.data[0]
