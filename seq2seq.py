@@ -12,11 +12,11 @@ from torch import optim
 import torch.nn.functional as F
 
 use_gpu = torch.cuda.is_available()
-use_gpu = False
 
 SOS_token = 0
 EOS_token = 1
 MAX_LENGTH = 2000
+EMBED_DIM = 128
 
 
 word_to_embed = pickle.load(open('word_to_embeds.pkl', 'rb'))
@@ -24,12 +24,11 @@ embed_to_word = pickle.load(open('embeds_to_word.pkl', 'rb'))
 missing_word = word_to_embed['unknown']
 
 
-def embed_words(sentence):
-    sequence = [SOS_token]
-    for word in sentence.split(' '):
+def embed_words(sentence_list):
+    sequence = []
+    for word in sentence_list:
         sequence.append(embed_word(word))
-    sequence.append(EOS_token)
-    return sentence
+    return sequence
 
 
 def embed_word(word):
@@ -37,18 +36,18 @@ def embed_word(word):
 
 data_in = pickle.load(open('pairs.pkl', 'rb'))
 
-
-def variable_from_sentence(sentence):
-    embeds_arr = embed_words(sentence)
-    var = Variable(torch.LongTensor(embeds_arr).view(-1, 1))
-    if use_gpu:
-        var = var.cuda()
-    return var
+#
+# def variable_from_sentence(sentence):
+#     embeds_arr = embed_words(sentence)
+#     var = Variable(torch.LongTensor(embeds_arr).view(-1, 1))
+#     if use_gpu:
+#         var = var.cuda()
+#     return var
 
 
 def variables_from_pair(pair):
-    input_var = variable_from_sentence(pair[0])
-    target_var = variable_from_sentence(pair[1])
+    input_var = embed_words(pair[0])
+    target_var = embed_words(pair[1])
     return input_var, target_var
 
 
@@ -63,11 +62,10 @@ class EncoderRNN(nn.Module):
         self.embedding = nn.Embedding(input_size, hidden_size)
         self.gru = nn.GRU(hidden_size, hidden_size, n_layers)
 
-    def forward(self, word_inputs, hidden):
+    def forward(self, embed_in, hidden):
         # Note: we run this all at once (over the whole input sequence)
-        seq_len = len(word_inputs)
-        embedded = self.embedding(word_inputs).view(seq_len, 1, -1)
-        output, hidden = self.gru(embedded, hidden)
+        # embedded = self.embedding(embed_in).view(1, -1)
+        output, hidden = self.gru(embed_in, hidden)
         return output, hidden
 
     def init_hidden(self):
@@ -184,11 +182,11 @@ class BahdanauAttnDecoderRNN(nn.Module):
         self.gru = nn.GRU(hidden_size * 2, hidden_size, n_layers, dropout=dropout_p)
         self.out = nn.Linear(hidden_size, output_size)
 
-    def forward(self, word_input, last_hidden, encoder_outputs):
+    def forward(self, embed_in, last_hidden, encoder_outputs):
         # Note that we will only be running forward for a single decoder time step, but will use all encoder outputs
 
         # Get the embedding of the current input word (last output word)
-        word_embedded = self.embedding(word_input).view(1, 1, -1) # S=1 x B x N
+        word_embedded = self.embedding(embed_in).view(1, -1)
         word_embedded = self.dropout(word_embedded)
 
         # Calculate attention weights and apply to encoder outputs
@@ -207,31 +205,31 @@ class BahdanauAttnDecoderRNN(nn.Module):
         return output, hidden, attn_weights
 
 
-encoder_test = EncoderRNN(10, 10, 2)
-decoder_test = AttnDecoderRNN('general', 10, 10, 2)
+encoder_test = EncoderRNN(EMBED_DIM, 256, 2)
+decoder_test = AttnDecoderRNN('general', 256, 256, 2)
 print(encoder_test)
 print(decoder_test)
 
 encoder_hidden = encoder_test.init_hidden()
 print data_in[0]
 word_in, target = variables_from_pair(data_in[0])
-print word_in
 if use_gpu:
     encoder_test.cuda()
-    word_input = word_input.cuda()
-encoder_outputs, encoder_hidden = encoder_test(word_input, encoder_hidden)
+    word_input = [x.cuda() for x in word_in]
+for embed in word_in:
+    encoder_outputs, encoder_hidden = encoder_test(embed, encoder_hidden)
+# encoder_outputs, encoder_hidden = encoder_test(word_input, encoder_hidden)
 
-word_inputs = Variable(torch.LongTensor([1, 2, 3]))
-decoder_attns = torch.zeros(1, 3, 3)
+decoder_attns = torch.zeros(1, len(word_in), EMBED_DIM)
 decoder_hidden = encoder_hidden
 decoder_context = Variable(torch.zeros(1, decoder_test.hidden_size))
 
 if use_gpu:
     decoder_test.cuda()
-    word_inputs = word_inputs.cuda()
+    word_inputs = [x.cuda() for x in word_in]
     decoder_context = decoder_context.cuda()
 
-for i in range(3):
-    decoder_output, decoder_context, decoder_hidden, decoder_attn = decoder_test(word_inputs[i], decoder_context, decoder_hidden, encoder_outputs)
+for index, embed in enumerate(word_in):
+    decoder_output, decoder_context, decoder_hidden, decoder_attn = decoder_test(embed, decoder_context, decoder_hidden, encoder_outputs)
     print(decoder_output.size(), decoder_hidden.size(), decoder_attn.size())
-    decoder_attns[0, i] = decoder_attn.squeeze(0).cpu().data
+    decoder_attns[0, index] = decoder_attn.squeeze(0).cpu().data
