@@ -41,8 +41,15 @@ master_dir = os.path.join(os.getcwd(), 'masters')
 for filename in os.listdir(master_dir):
     master_txt = open(os.path.join(master_dir, filename), 'r').read().lower().split('\n')
     # Skip to when my friend speaks first so I can model my responses
+    for sequence in master_txt:
+        if (sequence.split(' ')[0] == 'friend:' or sequence.split(' ')[0] == 'me:') and (len(sequence.split(' ')) <= 2):
+            if sequence.split(' ')[1] == '':
+                master_txt.remove(sequence)
+                print 'seq to remove', sequence
     while master_txt[0].split(' ')[0] != 'friend:':
         master_txt.remove(master_txt[0])
+        if len(master_txt) < 1:
+            break
     print master_txt[0]
     last_speaker = None
     friend_spoken = False
@@ -52,8 +59,30 @@ for filename in os.listdir(master_dir):
     current_me = []
     index = 0
     while index < len(master_txt) - 1:
-        sequence = master_txt[index]
-        speaker = sequence.split(' ')[0]
+        sequence = master_txt[index].split(' ')
+        print 'SEQ', sequence
+        speaker = sequence[0]
+        print 'Speaker: ', speaker
+        print 'Last speaker:', last_speaker
+        print 'Sequence:', sequence
+        # If it's a continuation of a person
+        if speaker != 'friend:' and speaker != 'me:':
+            print 'Continuation of:', last_speaker
+            if last_speaker is None:
+                # Should never happen
+                index += 1
+                continue
+            elif last_speaker == 'friend:':
+                current_friend.append(sequence)
+                friend_spoken = True
+            elif last_speaker == 'me:':
+                current_me.append(sequence)
+                me_spoken = True
+            index += 1
+            continue
+
+        # Remove speaker tag from sequence
+        sequence = sequence[1:]
         if last_speaker is None:
             last_speaker = speaker
         # Friend still speaker:
@@ -82,9 +111,11 @@ for filename in os.listdir(master_dir):
             me_spoken = False
             # Redo this sequence because it didn't get added to anything
             index -= 1
+            break
         index += 1
-
-print random.choice(pairs)
+        last_speaker = speaker
+        print 'Current Friend:', current_friend
+        print 'Current Me:', current_me
+    break
+print pairs[0]
 pickle.dump(pairs, open('pairs.pkl', 'wb'))
-
-
