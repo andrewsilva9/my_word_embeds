@@ -1,13 +1,8 @@
 import torch
 import torch.autograd as autograd
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import pickle
-
-
-def save_checkpoint(state, filename='my_cbow_embedding_model.pth.tar'):
-    torch.save(state, filename)
 
 
 def load_checkpoint(filename):
@@ -17,11 +12,7 @@ def load_checkpoint(filename):
 
 use_gpu = torch.cuda.is_available()
 
-raw_text = pickle.load(open('raw_text.pkl', 'rb'))
 word_to_ix = pickle.load(open('word_to_ix.pkl', 'rb'))
-
-# print data[:5]
-print_every = 1000
 
 
 class CBOW(nn.Module):
@@ -36,7 +27,6 @@ class CBOW(nn.Module):
         return embeds
 
 
-losses = []
 # here context_size should be 4 instead of 2
 embed_dim = 128
 cont_size = 4
@@ -49,14 +39,11 @@ else:
 optimizer = optim.SGD(model.parameters(), lr=.001)
 
 chk = load_checkpoint('my_cbow_embedding_model52.pth.tar')
-curr_epoch = chk['epoch']
 model.load_state_dict(chk['state_dict'])
-optimizer.load_state_dict(chk['optimizer'])
 word_to_embeds = {}
 embeds_to_words = {}
 for word in word_to_ix.keys():
     model.zero_grad()
-    # model.test()
     if use_gpu:
         context_vars = autograd.Variable(torch.cuda.LongTensor([word_to_ix[word]]))
     else:
@@ -64,6 +51,7 @@ for word in word_to_ix.keys():
     print 'Word:', word
     print 'IX:', word_to_ix[word]
     print 'ContextVars:', context_vars.data[0]
+    # FIXME: Space hack. Remove this when I fix word embeddings to work with 0... /sigh
     if word_to_ix[word] == 0:
         continue
     embeds = model(context_vars)
