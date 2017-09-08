@@ -78,6 +78,8 @@ for filename in os.listdir(master_dir):
             pairs.append((current_friend, current_me))
             # last speaker will be friend but whatever, set to none
             last_speaker = None
+            friend_spoken = False
+            me_spoken = False
             # Redo this sequence because it didn't get added to anything
             index -= 1
         index += 1
