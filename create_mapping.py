@@ -60,7 +60,7 @@ for word in word_to_ix.keys():
     if use_gpu:
         context_vars = autograd.Variable(torch.cuda.LongTensor(word_to_ix[word]))
     else:
-        context_vars = autograd.Variable(torch.LongTensor(ix))
+        context_vars = autograd.Variable(torch.LongTensor(word_to_ix[word]))
     print 'Word:', word
     print 'IX:', word_to_ix[word]
     if word_to_ix[word] == 0:
