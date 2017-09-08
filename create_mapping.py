@@ -48,7 +48,7 @@ else:
     loss_function = nn.NLLLoss()
 optimizer = optim.SGD(model.parameters(), lr=.001)
 
-chk = load_checkpoint('my_cbow_embedding_model36.pth.tar')
+chk = load_checkpoint('my_cbow_embedding_model52.pth.tar')
 curr_epoch = chk['epoch']
 model.load_state_dict(chk['state_dict'])
 optimizer.load_state_dict(chk['optimizer'])
