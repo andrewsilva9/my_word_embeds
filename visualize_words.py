@@ -8,7 +8,7 @@ word_to_embed = pickle.load(open('word_to_embeds.pkl', 'rb'))
 embed_to_word = pickle.load(open('embeds_to_word.pkl', 'rb'))
 target_words = word_to_embed.keys()[:2000]
 
-rows = [word_to_embed[word] for word in target_words if word in word_to_embed]
+rows = [word_to_embed[word].cpu().data.numpy() for word in target_words if word in word_to_embed]
 
 target_matrix = np.array(rows)
 reduced_matrix = ts.tsne(target_matrix, 2)
