@@ -1,4 +1,4 @@
-import numpy as Math
+import numpy as np
 import pylab as Plot
 import pickle
 import tsne as ts
@@ -10,7 +10,7 @@ target_words = word_to_embed.keys()[:2000]
 
 rows = [word_to_embed[word] for word in target_words if word in word_to_embed]
 
-target_matrix = rows
+target_matrix = np.array(rows)
 reduced_matrix = ts.tsne(target_matrix, 2)
 
 Plot.figure(figsize=(200, 200), dpi=100)
