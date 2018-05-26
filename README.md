@@ -5,15 +5,16 @@ First, get your text corpus. I gathered all of my iMessages up using baskup: htt
 Otherwise, within the baskup directory just run :
 ```
 $ baskup.sh
-$ cat*/* > master.txt
+$ mkdir masters
+$ mv */* > masters/
 ```
-Which will put all of your text history into a file called 'master.txt'.
+Which will put all of your text history into a subdir called `masters`.
 
-Move master.txt into this directory, and run 'make_text_pkl.py' in order to generate your raw text pickle, which the embedding model will use.
+Now, with `masters` full of .txt files, run:
 
-```python make_text_pkl.py```
+```python create_seq_pairs.py```
 
-Note that I'm casting all text to lowercase for simplicity.
+Note that I'm casting all text to lowercase for simplicity, and removing some punctuation. After that cleaning up, this creates pairs of "Friend text" and "My response" in `pairs.pkl`.
 
 After that, your text is ready to go and you can run
 

@@ -2,7 +2,21 @@ import os
 import random
 import pickle
 import string
+import re
 # TODO: currently not preserving conversation context, only message / response. context would help
+
+
+def clean_message(message):
+    # Remove new lines within message
+    cleaned = message.replace('\n',' ').lower()
+    # Deal with some weird tokens
+    cleaned = cleaned.replace("\xc2\xa0", "")
+    # Remove punctuation
+    cleaned = re.sub('([.,!?])','', cleaned)
+    # Remove multiple spaces in message
+    cleaned = re.sub(' +',' ', cleaned)
+    return cleaned
+
 
 master_dir = os.path.join(os.getcwd(), 'masters')
 pairs = []
@@ -32,7 +46,11 @@ for filename in os.listdir(master_dir):
     index = 0
 
     while index < len(master_txt) - 1:
-        sequence = master_txt[index].split().translate
+        sequence = clean_message(master_txt[index]).split()
+        if len(sequence) < 1:
+            print sequence
+            index += 1
+            continue
         speaker = sequence[0]
 
         # If it's a continuation of a person
@@ -52,14 +70,6 @@ for filename in os.listdir(master_dir):
 
         # Remove speaker tag from sequence
         sequence = sequence[1:]
-
-        # Remove punctuation from sequence
-        for index in range(len(sequence)):
-            sequence[index] = sequence[index].translate(None, string.punctuation)
-            # Remove empty spaces where punctuation used to be
-            if sequence[index] == '':
-                sequence.remove('')
-                index -= 1
 
         if last_speaker is None:
             last_speaker = speaker
@@ -86,7 +96,10 @@ for filename in os.listdir(master_dir):
                 longest = len(current_me)
             if len(current_friend) > longest:
                 longest = len(current_friend)
-            pairs.append((current_friend, current_me))
+            input_text = " ".join(str(x) for x in current_friend)
+            output_text = " ".join(str(x) for x in current_me)
+            pairs.append((input_text, output_text))
+            # print pairs
             # last speaker will be friend but whatever, set to none
             # debug_pairs.append((current_friend, current_me))
             current_friend = []
