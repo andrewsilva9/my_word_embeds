@@ -3,3 +3,6 @@ for d in **/*; do
   		mv "$d" "$d.txt"
 fi
 done
+
+mkdir ~/Desktop/master
+mv */*.txt ~/Desktop/master/
