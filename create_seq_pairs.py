@@ -1,6 +1,6 @@
 import os
 import random
-import pickle
+import cPickle
 import string
 import re
 # TODO: currently not preserving conversation context, only message / response. context would help
@@ -17,26 +17,37 @@ def clean_message(message):
     cleaned = re.sub(' +',' ', cleaned)
     return cleaned
 
-
-master_dir = os.path.join(os.getcwd(), 'masters')
+master_dir = '/Users/andrewsilva/Desktop/master/'
 pairs = []
 longest = 0
 for filename in os.listdir(master_dir):
     master_txt = open(os.path.join(master_dir, filename), 'r').read().lower().split('\n')
-
-    # TODO: DEBUG
-    debug_pairs = []
     # Remove blank sequences
-    for sequence in master_txt:
-        if (sequence.split(' ')[0] == 'friend:' or sequence.split(' ')[0] == 'me:') and (len(sequence.split(' ')) <= 2):
-            if sequence.split(' ')[1] == '':
-                master_txt.remove(sequence)
+    seqs_to_remove = []
+    for seq_ind in range(len(master_txt)):
+        sequence = master_txt[seq_ind]
+        sequence_intro = sequence.split(':')[0]
+        if sequence_intro.split(' ')[0] == '@':
+            continue
+        elif len(sequence.split(':')) < 2 or len(sequence.split(':')[1].split(' ')) < 2:
+            seqs_to_remove.append(sequence)
+            for upcoming_seq in range(seq_ind + 1, len(master_txt)):
+                seqs_to_remove.append(master_txt[upcoming_seq])
+                if len(master_txt[upcoming_seq].split(' ')) > 2 and master_txt[upcoming_seq].split(' ')[1] == '@':
+                    break
 
-    # Skip to when friend speaks first so I can model responses
-    while master_txt[0].split(' ')[0] != 'friend:':
+    for seq in seqs_to_remove:
+        if seq in master_txt:
+            master_txt.remove(seq)
+
+    if len(master_txt) < 1:
+        continue
+    while master_txt[0].split(' ')[0] == 'me:' or master_txt[0].split(' ')[1] == '@':
         master_txt.remove(master_txt[0])
         if len(master_txt) < 1:
             break
+    if len(master_txt) < 1:
+        continue
 
     last_speaker = None
     friend_spoken = False
@@ -46,47 +57,32 @@ for filename in os.listdir(master_dir):
     index = 0
 
     while index < len(master_txt) - 1:
-        sequence = clean_message(master_txt[index]).split()
-        if len(sequence) < 1:
+        sequence = clean_message(master_txt[index])
+        split_seq = sequence.split(' ')
+        if len(split_seq) < 1:
             print sequence
             index += 1
             continue
-        speaker = sequence[0]
-
-        # If it's a continuation of a person
-        if speaker != 'friend:' and speaker != 'me:':
-            if last_speaker is None:
-                # Should never happen
-                index += 1
-                continue
-            elif last_speaker == 'friend:':
-                current_friend.extend(sequence)
-                friend_spoken = True
-            elif last_speaker == 'me:':
-                current_me.extend(sequence)
-                me_spoken = True
+        speaker = sequence.split(':')[0]
+        if len(speaker.split(' ')) > 1 and speaker.split(' ')[1] == '@':
             index += 1
             continue
+        sequence = " ".join(str(x) for x in sequence.split(':')[1:]).split(' ')
 
-        # Remove speaker tag from sequence
-        sequence = sequence[1:]
-
-        if last_speaker is None:
-            last_speaker = speaker
         # Friend still speaker:
-        if speaker == 'friend:' and speaker == last_speaker:
+        if speaker != 'me' and speaker == last_speaker:
             current_friend.extend(sequence)
             friend_spoken = True
         # I'm still speaking:
-        elif speaker == 'me:' and speaker == last_speaker:
+        elif speaker == 'me' and speaker == last_speaker:
             current_me.extend(sequence)
             me_spoken = True
         # Friend speaking for the first time:
-        elif speaker == 'friend:' and friend_spoken is False:
+        elif speaker != 'me' and friend_spoken is False:
             current_friend.extend(sequence)
             friend_spoken = True
         # I'm speaking for the first time:
-        elif speaker == 'me:' and me_spoken is False:
+        elif speaker == 'me' and me_spoken is False:
             current_me.extend(sequence)
             me_spoken = True
         # We've both spoken and are on me/friend for the second time
@@ -114,4 +110,4 @@ for filename in os.listdir(master_dir):
 print len(pairs)
 print random.choice(pairs)
 print longest
-pickle.dump(pairs, open('pairs.pkl', 'wb'))
+cPickle.dump(pairs, open('pairs.pkl', 'wb'), protocol=cPickle.HIGHEST_PROTOCOL)
